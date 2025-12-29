@@ -7,11 +7,12 @@ from TTS.api import TTS
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
-from app.config import REF_VOICE_PATH
+from app.interfaces.tts_interface import TTSInterface
 from app.tts.text_normalizer import TextNormalizer
 from app.utils.audio_converter import AudioConverter
+from app.settings import global_settings  
 
-class XttsEngine:
+class CoquiTTS(TTSInterface):
     # Parametri Audio
     GEN_SPEED = 1.1        
     PITCH_STEPS = -0.5     
@@ -22,7 +23,7 @@ class XttsEngine:
     TOP_P = 0.8
 
     def __init__(self):
-        print("Inizializzazione XTTS Engine (Modalità Lazy)...")
+        print("IInizializzazione Plugin Coqui XTTS (Lazy Mode)...")
         
         self.normalizer = TextNormalizer()
         
@@ -73,6 +74,14 @@ class XttsEngine:
         
         # 1. CARICAMENTO FORZATO (Questo risolve l'errore 'NoneType')
         self._load_model()
+
+        # Recuperiamo la voce dai settings dinamici
+        # (Assicurati di aver aggiunto tts_voice_file in settings.py come stringa)
+        voice_path = global_settings.tts_voice_file 
+        
+        if not os.path.exists(voice_path):
+            print(f"Errore: File voce non trovato in {voice_path}")
+            return False
         
         clean_text = self.normalizer.clean_text(text)
         is_mp3 = output_filename.endswith(".mp3")
@@ -90,7 +99,7 @@ class XttsEngine:
                 outputs = self.model.synthesize(
                     clean_text,
                     self.config,
-                    speaker_wav=REF_VOICE_PATH,
+                    speaker_wav=voice_path,
                     language="it",
                     gpt_cond_len=self.GPT_COND_LEN,
                     speed=self.GEN_SPEED,

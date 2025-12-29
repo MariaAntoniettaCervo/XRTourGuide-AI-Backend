@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from typing import Optional
 
     #--- TITOLI ---
 
@@ -21,6 +22,18 @@ class DescriptionRequest(BaseModel):
 class DescriptionResponse(BaseModel):
     full_text_optimized: str  # Testo intero da mostrare a schermo (UI)
     tts_chunks: List[str]     # Lista di frasi <180char per il motore audio
+
+    # --- FIX MARKDOWN ---
+
+class MarkdownFixRequest(BaseModel):
+    text: str
+    tone: str = "professional" # Opzionale: professional, friendly, academic
+
+class MarkdownFixResponse(BaseModel):
+    original_text: str
+    fixed_text: str
+    success: bool            # <--- NUOVO: True se l'AI ha risposto, False se errore
+    error_message: Optional[str] = None # <--- NUOVO: Descrizione dell'errore    
 
     # --- AUDIO ON DEMAND ---
 class AudioGenerationRequest(BaseModel):

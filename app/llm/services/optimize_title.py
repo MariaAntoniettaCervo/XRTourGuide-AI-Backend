@@ -1,35 +1,23 @@
-import ollama
 import json
 from app.schemas import TitleResponse
-
-MODEL_NAME = "qwen2.5:7b"
+from app.llm.factory import LLMFactory  
 
 def generate_optimized_title(original_title: str) -> TitleResponse:
     
-    # --- 1. PATTERN: PERSONA ---
-    persona = (
+    # 1. SYSTEM PROMPT: Definizione Persona e Audience
+    # È meglio tenere qui le regole generali di comportamento
+    system_role = (
         "Sei uno storico dell'arte specializzato in turismo ed in storytelling. "
         "Il tuo stile è conciso, evocativo e moderno. "
-        "Sai trasformare termini noiosi in interessanti ed accattivanti."
-    )
-
-    # --- 2. PATTERN: AUDIENCE  ---
-    audience = (
         "Il tuo pubblico sono turisti curiosi che usano lo smartphone per visualizzare i contenuti in AR. "
         "I titoli devono catturarli in meno di 1 secondo. "
         "Evita linguaggio troppo accademico o troppo formale."
     )
 
-    # --- 3. PATTERN: CONTEXT MANAGER  ---
-    context = (
-        f"Il titolo attuale '{original_title}' è troppo generico o poco attraente. "
-        "Obiettivo: Generare varianti che spingano l'utente a cliccare per saperne di più."
-    )
-
-    # --- 4. PATTERN: TEMPLATE (Format)  ---
-    template = """
+    # 2. TEMPLATE JSON (Istruzioni di formato)
+    json_template = """
     FORMATO OUTPUT RICHIESTO (JSON PURO):
-    Devi restituire SOLO un oggetto JSON con questa struttura esatta, senza altro testo prima o dopo:
+    Devi restituire SOLO un oggetto JSON con questa struttura esatta:
     {
         "options": [
             "Titolo Corto & Punchy (Max 25 car)",
@@ -40,40 +28,42 @@ def generate_optimized_title(original_title: str) -> TitleResponse:
     }
     """
 
-    # --- ASSEMBLAGGIO DEL PROMPT ---
-    full_prompt = f"""
-    {persona}
-    {audience}
-    {context}
+    # 3. USER PROMPT: Il Task specifico (COSA fare ora)
+    user_prompt = f"""
+    ANALISI CONTESTO: Il titolo attuale '{original_title}' è troppo generico o poco attraente.
+    OBIETTIVO: Generare varianti che spingano l'utente a cliccare per saperne di più.
     
     TASK: Riscrivi il titolo '{original_title}'.
     
-    {template}
+    {json_template}
+    
+    Rispondi SOLO col JSON, nessun altro commento.
     """
 
-    print(f" Chiamata a {MODEL_NAME} per ottimizzazione titoli...")
+    print(f"Ottimizzazione titolo '{original_title}' in corso...")
 
-    # Chiamata a Ollama
-    response = ollama.chat(model=MODEL_NAME, messages=[
-        {'role': 'user', 'content': full_prompt},
-    ])
-
-    raw_content = response['message']['content']
-    
-    # Parsing del JSON (Pulizia nel caso di refusi)
     try:
-        # pulizia ```json ... ```,
+        # 4. CHIAMATA ASTRATTA
+        # Otteniamo il motore configurato (Ollama, OpenAI, ecc.)
+        llm_engine = LLMFactory.get_engine()
+        
+        # Generiamo la risposta
+        raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
+        
+        # 5. PARSING E PULIZIA
+        # Rimuoviamo eventuali backtick del markdown (spesso i modelli aggiungono ```json)
         clean_json = raw_content.replace("```json", "").replace("```", "").strip()
         data = json.loads(clean_json)
         
         return TitleResponse(
             original=original_title,
-            options=data["options"],
-            best_option=data["best_option"]
+            options=data.get("options", [original_title]),
+            best_option=data.get("best_option", original_title)
         )
+
     except Exception as e:
-        print(f" Errore parsing JSON: {e}")
-        # Fallback in caso di errore
+        print(f"Errore generazione titoli: {e}")
+        # Fallback sicuro: restituisci il titolo originale come unica opzione
         return TitleResponse(
             original=original_title,
             options=[original_title], 

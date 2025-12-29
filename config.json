@@ -1,0 +1,4 @@
+{
+    "tts_engine": "coqui",
+    "llm_model_name": "qwen2.5:7b"
+}

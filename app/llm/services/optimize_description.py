@@ -1,4 +1,4 @@
-import ollama
+from app.llm.factory import LLMFactory
 import json
 from app.schemas import DescriptionResponse
 
@@ -56,7 +56,7 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
     """
 
     # --- Costruzione Prompt ---
-    prompt = f"""
+    user_prompt = f"""
     {system_role}
     
     TESTO ORIGINALE: "{original_text}"
@@ -71,22 +71,25 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
     """
 
     try:
-        response = ollama.chat(model=MODEL_NAME, messages=[{'role': 'user', 'content': prompt}])
-        raw_content = response['message']['content']
+        # 4. CHIAMATA ASTRATTA TRAMITE FACTORY
+        llm_engine = LLMFactory.get_engine()
         
-        # Pulizia JSON da possibili refusi
+        # Passiamo system_prompt e user_prompt separati
+        raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
+        
+        # 5. PARSING E PULIZIA (Logica invariata)
         clean_json = raw_content.replace("```json", "").replace("```", "").strip()
         data = json.loads(clean_json)
         
         return DescriptionResponse(
-            full_text_optimized=data["full_text_optimized"],
-            tts_chunks=data["tts_chunks"]
+            full_text_optimized=data.get("full_text_optimized", original_text),
+            tts_chunks=data.get("tts_chunks", [original_text])
         )
 
     except Exception as e:
         print(f"Errore LLM Descrizione: {e}")
-        # Fallback sicuro: restituisce il testo originale diviso grossolanamente
+        # Fallback sicuro
         return DescriptionResponse(
             full_text_optimized=original_text,
-            tts_chunks=[original_text] #evita crash
+            tts_chunks=[original_text]
         )
