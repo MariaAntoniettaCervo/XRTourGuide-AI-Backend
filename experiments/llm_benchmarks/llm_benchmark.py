@@ -5,6 +5,9 @@ import csv
 import re
 import math
 import os
+import psutil
+import subprocess 
+import datetime 
 
 # --- CONFIGURAZIONE ---
 MODELS = [
@@ -14,24 +17,20 @@ MODELS = [
     "phi3.5"
 ]
 
-OUTPUT_FILE = "benchmark_v3_strict.csv"
+OUTPUT_FILE = "benchmark_result.csv" 
 OLLAMA_API = "http://localhost:11434/api"
+BASELINE_VRAM = 0.0 
 
 # Pesi per il calcolo del punteggio finale
-# Nota: json_validity e gestito separatamente come penalita critica
 WEIGHTS = {
-    "tts_safety": 1.5,    
-    "fidelity": 2.0,      
-    "speed": 1.5,         
-    "length_accuracy": 0.5, 
-    "lexical_variety": 0.5, 
-    "memory_load": -1.0   
+    "tts_safety": 1.5, "fidelity": 2.0, "speed": 1.5,         
+    "length_accuracy": 0.5, "lexical_variety": 0.5, 
+    "memory_load": -1.0, "ram_usage": -2.0      
 }
 
-# Penalita bloccante per fallimento JSON
 PENALTY_BROKEN_JSON = -1000.0
 
-# --- PROMPT (INVARIATO) ---
+# --- PROMPT ---
 SYSTEM_PROMPT = """
 ### PATTERN: PERSONA
 Agisci come un esperto di storia dell'arte empatico e carismatico.
@@ -67,51 +66,96 @@ Scrivi il campo 'descrizione_audio' ottimizzato ESPLICITAMENTE per la lettura vo
 2. Usa punti esclamativi (!) per enfatizzare le emozioni.
 3. Spezza le frasi lunghe in frasi brevi.
 4. NON usare mai elenchi puntati, parentesi o numeri (es. "1200" -> "milleduecento").
-
 """
 
 USER_INPUT = "Il Colosseo è un anfiteatro romano del primo secolo. Era usato per i giochi dei gladiatori ed è molto grande."
 
-# --- ALGORITMI DI ANALISI ---
+# --- FUNZIONI UTILI ---
+
+def get_system_ram_gb():
+    try:
+        mem = psutil.virtual_memory()
+        return round(mem.used / (1024**3), 2)
+    except: return 0.0
+
+def get_vram_gb():
+    """Ottiene l'uso della VRAM attuale tramite nvidia-smi."""
+    try:
+        result = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+            encoding="utf-8"
+        )
+        total_mem_mb = sum(float(x) for x in result.strip().split('\n'))
+        return round(total_mem_mb / 1024, 2)
+    except: return 0.0
+
+def quick_unload(model_name):
+    """Invia segnale di unload rapido."""
+    try:
+        requests.post(f"{OLLAMA_API}/chat", json={"model": model_name, "keep_alive": 0})
+    except: pass
+
+def get_running_models():
+    """Interroga l'API per vedere cosa è caricato in memoria."""
+    try:
+        res = requests.get(f"{OLLAMA_API}/ps")
+        if res.status_code == 200:
+            return res.json().get('models', [])
+    except: pass
+    return []
+
+def initial_cleanup():
+    """
+    Esegue la pulizia profonda prima del benchmark.
+    Identifica i modelli attivi, li scarica e attende la stabilizzazione.
+    """
+    print("--- FASE 1: PULIZIA INIZIALE SISTEMA ---")
+    active_models = get_running_models()
+    
+    if active_models:
+        print(f"Rilevati {len(active_models)} modelli attivi. Scaricamento forzato in corso...")
+        for m in active_models:
+            name = m['name']
+            print(f"   Scaricamento: {name}")
+            quick_unload(name)
+        
+        # Attesa tecnica per permettere al driver GPU di liberare le risorse
+        print("   Attesa stabilizzazione VRAM (5s)...")
+        time.sleep(5)
+    else:
+        print("   Nessun modello attivo rilevato. Sistema pulito.")
+
+    # Lettura della VRAM pulita
+    vram = get_vram_gb()
+    print(f"   VRAM Attuale post-pulizia: {vram} GB")
+    return vram
 
 def get_next_run_id():
-    """Legge il CSV per trovare l'ultimo Run_ID e lo incrementa."""
-    if not os.path.isfile(OUTPUT_FILE):
-        return 1
-    
+    if not os.path.isfile(OUTPUT_FILE): return 1
     try:
         with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             ids = [int(row.get('Run_ID', 0)) for row in reader if row.get('Run_ID', '').isdigit()]
             if not ids: return 1
             return max(ids) + 1
-    except Exception as e:
-        print(f"Attenzione: Impossibile leggere ID precedente ({e}). Ricomincio da 1.")
-        return 1
+    except: return 1
+
+# --- METRICHE DI ANALISI ---
 
 def check_tts_safety(text):
     errors = []
     if re.search(r'\d', text):
         numbers = re.findall(r'\d+', text)
         errors.append(f"NUMBERS({len(numbers)})")
-    if re.search(r'[%$@#\/]', text):
-        errors.append("SYMBOLS")
-    if re.search(r'[\(\)\[\]]', text):
-        errors.append("PARENTHESES")
-
+    if re.search(r'[%$@#\/]', text): errors.append("SYMBOLS")
+    if re.search(r'[\(\)\[\]]', text): errors.append("PARENTHESES")
     score = max(0, 100 - (len(errors) * 25))
     return score, errors
 
 def check_length_accuracy(text, min_w=100, max_w=150):
     words = len(text.split())
-    if min_w <= words <= max_w:
-        return 100, words
-    
-    if words < min_w:
-        diff = min_w - words
-    else:
-        diff = words - max_w
-        
+    if min_w <= words <= max_w: return 100, words
+    diff = min_w - words if words < min_w else words - max_w
     score = max(0, 100 - (diff * 2)) 
     return score, words
 
@@ -124,17 +168,13 @@ def calculate_ttr(text):
 def calculate_fidelity(user_input, generated_text):
     clean_in = re.sub(r'[^\w\s]', '', user_input.lower())
     input_keys = {w for w in clean_in.split() if len(w) > 3 and w not in ["della", "sono", "questo"]}
-    
     if not input_keys: return 100, []
-    
     gen_lower = generated_text.lower()
     matches = 0
     missing = []
-    
     for k in input_keys:
         if k[:-1] in gen_lower: matches += 1
         else: missing.append(k)
-            
     score = (matches / len(input_keys)) * 100
     return round(score, 1), missing
 
@@ -142,7 +182,6 @@ def get_model_details(model_name):
     try:
         res = requests.post(f"{OLLAMA_API}/show", json={"name": model_name}).json()
         details = res.get("details", {})
-        
         size_gb = 0
         try:
             tags = requests.get(f"{OLLAMA_API}/tags").json()
@@ -151,7 +190,6 @@ def get_model_details(model_name):
                     size_gb = round(m['size'] / (1024**3), 2)
                     break
         except: pass
-
         return {
             "params": details.get("parameter_size", "N/A"),
             "quant": details.get("quantization_level", "N/A"),
@@ -161,14 +199,12 @@ def get_model_details(model_name):
     except:
         return {"params": "ERR", "quant": "ERR", "family": "ERR", "size_gb": 0}
 
-def analyze_performance(model_name, response_json, duration_total):
-    # Dati base
+def analyze_performance(model_name, response_json, duration_total, ram_delta, vram_load_absolute):
     load_dur = response_json.get("load_duration", 0) / 1e9
     eval_dur = response_json.get("eval_duration", 0) / 1e9
     gen_toks = response_json.get("eval_count", 0)
     tps = gen_toks / eval_dur if eval_dur > 0 else 0
     
-    # Parsing
     raw = response_json["message"]["content"]
     json_valid = False
     narrative = raw
@@ -182,24 +218,21 @@ def analyze_performance(model_name, response_json, duration_total):
             narrative = data.get("descrizione_audio", raw)
     except: pass
 
-    # --- CALCOLO METRICHE ---
     fidelity_score, missing = calculate_fidelity(USER_INPUT, narrative)
     tts_score, tts_errors = check_tts_safety(narrative)
     len_score, word_count = check_length_accuracy(narrative)
     ttr = calculate_ttr(narrative)
     
-    # --- PUNTEGGIO FINALE PONDERATO ---
+    # --- PUNTEGGIO FINALE ---
     final_score = 0
-    
-    # Somma dei punteggi standard
     final_score += (fidelity_score * WEIGHTS["fidelity"])
     final_score += (tts_score * WEIGHTS["tts_safety"]) 
     final_score += (len_score * WEIGHTS["length_accuracy"])
     final_score += (tps * WEIGHTS["speed"])
     final_score += (ttr * 100 * WEIGHTS["lexical_variety"]) 
-    final_score += (load_dur * WEIGHTS["memory_load"]) 
+    final_score += (load_dur * WEIGHTS["memory_load"])
+    final_score += (ram_delta * WEIGHTS["ram_usage"]) 
     
-    # APPLICAZIONE PENALITA BLOCCANTE PER JSON INVALIDO
     if not json_valid:
         final_score += PENALTY_BROKEN_JSON
 
@@ -207,6 +240,8 @@ def analyze_performance(model_name, response_json, duration_total):
         "json_valid": json_valid,
         "tps": round(tps, 2),
         "load_time": round(load_dur, 2),
+        "ram_delta_gb": ram_delta,  
+        "vram_delta_gb": vram_load_absolute, 
         "fidelity_pct": fidelity_score,
         "missing_concepts": str(missing),
         "tts_score": tts_score,         
@@ -220,13 +255,27 @@ def analyze_performance(model_name, response_json, duration_total):
 # --- MAIN ---
 
 def run_benchmark():
+    global BASELINE_VRAM
     run_id = get_next_run_id()
+    print(f"Avvio Benchmark [Run ID: {run_id}]\n")
+    
+    # 1. CLEANUP e CALCOLO TARA
+    BASELINE_VRAM = initial_cleanup()
+    
+    print(f"\n--- BASELINE VRAM DEFINITIVA: {BASELINE_VRAM} GB ---")
+    if BASELINE_VRAM > 2.0:
+        print("ATTENZIONE: La VRAM di base e' ancora alta (>2GB).")
+    else:
+        print("VRAM Ottimale per il test.\n")
 
-    print(f"Avvio Benchmark [Run ID: {run_id}] su {len(MODELS)} modelli.\n")
     results = []
     
     for model in MODELS:
         print(f"Testing: {model}...")
+        
+        # Unload rapido precauzionale
+        quick_unload(model)
+
         specs = get_model_details(model)
         
         payload = {
@@ -237,27 +286,56 @@ def run_benchmark():
         }
         
         try:
+           
+            ram_before = get_system_ram_gb()
+            
             start = time.time()
             res = requests.post(f"{OLLAMA_API}/chat", json=payload)
+            
+            ram_after = get_system_ram_gb()
+            
+            
+            vram_end = get_vram_gb() 
+            
+            # Calcoli Delta
+            ram_delta = max(0.0, round(ram_after - ram_before, 2))
+            
+            # Calcolo Carico VRAM Assoluto (Totale attuale - Tara iniziale pulita)
+            vram_load_calc = max(0.0, round(vram_end - BASELINE_VRAM, 2))
+            
             if res.status_code == 200:
-                metrics = analyze_performance(model, res.json(), time.time() - start)
-                
+                metrics = analyze_performance(model, res.json(), time.time() - start, ram_delta, vram_load_calc)
                 row = {**{"Run_ID": run_id, "Model": model}, **specs, **metrics}
-                
                 results.append(row)
                 
-                # Feedback visivo sullo stato JSON
                 json_status = "OK" if metrics['json_valid'] else "FAIL"
-                print(f"   Score: {metrics['final_score']} | JSON: {json_status} | TTS Safe: {metrics['tts_score']}/100 | Fedelta: {metrics['fidelity_pct']}%")
+                
+                print(f"   Score: {metrics['final_score']} | RAM Delta: +{metrics['ram_delta_gb']}GB | JSON: {json_status} | TTS Safe: {metrics['tts_score']}/100 | Fedelta: {metrics['fidelity_pct']}%")
+                print(f"   (VRAM Load: {metrics['vram_delta_gb']}GB [Tot: {vram_end} - Base: {BASELINE_VRAM}])")
+                
+                if metrics['ram_delta_gb'] > 0.5:
+                    print(f"   OFFLOADING RAM: +{metrics['ram_delta_gb']} GB (Il modello non entra tutto in GPU)")
+
+                # Unload rapido post-test
+                quick_unload(model)
+                print("-" * 30)
+
             else:
                 print(f"   HTTP Error {res.status_code}")
         except Exception as e:
             print(f"   Exception: {e}")
 
     if results:
+       
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        for row in results:
+            row["Timestamp"] = current_time
+
+        
         keys = [
-            "Run_ID", "Model", "final_score", "tts_score", "tts_errors", 
-            "fidelity_pct", "missing_concepts", "json_valid", 
+            "Run_ID", "Timestamp", "Model", "final_score", 
+            "ram_delta_gb", "vram_delta_gb", "json_valid",
+            "tts_score", "tts_errors", "fidelity_pct", "missing_concepts", 
             "tps", "load_time", "size_gb", "word_count", 
             "lexical_var_ttr", "params", "quant", "family", 
             "narrative_preview"
@@ -266,10 +344,16 @@ def run_benchmark():
         file_exists = os.path.isfile(OUTPUT_FILE)
         
         with open(OUTPUT_FILE, 'a', newline='', encoding='utf-8') as f:
+            
+            if file_exists and os.path.getsize(OUTPUT_FILE) > 0:
+                f.write('\n\n') 
+            
             writer = csv.DictWriter(f, fieldnames=keys, extrasaction='ignore')
             
-            if not file_exists:
+            if not file_exists: 
                 writer.writeheader()
+            
+            writer.writerow({k: "------" for k in keys}) 
             
             writer.writerows(results)
             

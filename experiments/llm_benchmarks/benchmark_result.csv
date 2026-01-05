@@ -1,0 +1,13 @@
+Run_ID,Timestamp,Model,final_score,ram_delta_gb,vram_delta_gb,json_valid,tts_score,tts_errors,fidelity_pct,missing_concepts,tps,load_time,size_gb,word_count,lexical_var_ttr,params,quant,family,narrative_preview
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+1,2026-01-05 11:42:33,qwen2.5:7b,372.59,0.71,4.64,True,75,['PARENTHESES'],60.0,"['grande', 'molto', 'usato', 'giochi']",56.52,5.26,4.36,72,0.8,7.6B,Q4_K_M,qwen2,"Immaginatevi una struttura impressionante, con mur..."
+1,2026-01-05 11:42:33,llama3.1:8b,357.76,0.73,4.97,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['molto', 'primo', 'usato']",52.33,5.28,4.58,78,0.86,8.0B,Q4_K_M,llama,"Immersi nella storia, si trova uno degli edifici p..."
+1,2026-01-05 11:42:33,mistral-nemo,308.64,2.52,5.79,True,75,['NUMBERS(2)'],70.0,"['molto', 'usato', 'giochi']",12.33,7.81,6.59,56,0.89,12.2B,Q4_0,llama,Immagina di camminare attraverso le antiche pietre...
+1,2026-01-05 11:42:33,phi3.5,-484.74,0.41,2.95,False,75,['PARENTHESES'],90.0,['molto'],94.57,2.77,2.03,140,0.69,3.8B,Q4_0,phi3,"{   ""titolo"": ""La maestria architettonica di Roma:..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+2,2026-01-05 11:44:21,qwen2.5:7b,332.48,0.67,4.63,True,50,"['NUMBERS(1)', 'PARENTHESES']",60.0,"['molto', 'grande', 'giochi', 'usato']",56.39,5.27,4.36,67,0.85,7.6B,Q4_K_M,qwen2,"Immaginatevi una gigantesca scena! Il Colosseo, qu..."
+2,2026-01-05 11:44:21,llama3.1:8b,381.28,0.67,4.95,True,50,"['NUMBERS(2)', 'PARENTHESES']",80.0,"['molto', 'usato']",52.11,5.55,4.58,84,0.82,8.0B,Q4_K_M,llama,"Immersi nella storia, il Colosseo rappresenta la m..."
+2,2026-01-05 11:44:21,mistral-nemo,301.8,2.53,5.78,True,75,['NUMBERS(2)'],70.0,"['molto', 'giochi', 'usato']",12.24,8.01,6.59,49,0.88,12.2B,Q4_0,llama,Immagina di trovarti al cospetto dell'icona più fa...
+2,2026-01-05 11:44:21,phi3.5,-522.61,0.42,2.94,False,50,"['NUMBERS(1)', 'PARENTHESES']",90.0,['molto'],93.96,2.7,2.03,152,0.74,3.8B,Q4_0,phi3,"{   ""titolo"": ""La maestria architettonica dell'Anf..."
