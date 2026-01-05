@@ -30,7 +30,6 @@ class AudioConverter:
         mp3_path = wav_path.replace(".wav", ".mp3")
         
         try:
-            # Caricamento (Pydub userà il converter settato sopra)
             audio = AudioSegment.from_wav(wav_path)
             
             # Export
@@ -38,7 +37,7 @@ class AudioConverter:
                 mp3_path, 
                 format="mp3", 
                 bitrate=bitrate,
-                parameters=["-q:a", "2"] # Qualità VBR Alta
+                parameters=["-q:a", "2"] 
             )
             
             # Pulizia
@@ -54,5 +53,4 @@ class AudioConverter:
             return wav_path
 
 if __name__ == "__main__":
-    # Test rapido
     print(f"Root Progetto stimata: {AudioConverter.PROJECT_ROOT}")

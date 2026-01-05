@@ -1,8 +1,7 @@
 from app.llm.factory import LLMFactory
 import json
 from app.schemas import DescriptionResponse
-
-MODEL_NAME = "qwen2.5:7b" 
+from app.utils.text_processing import smart_chunking
 
 def generate_optimized_description(original_text: str) -> DescriptionResponse:
     
@@ -28,32 +27,19 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
     1. Poiché devi espandere il testo, userai le tue conoscenze interne. FAI ATTENZIONE.
     2. VERIFICA ogni data, nome di imperatore o evento storico che aggiungi. Devono essere REALI.
     3. NON INVENTARE MAI DETTAGLI. Se non sei sicurissimo di un anno specifico, usa termini più generici (es. "all'inizio del primo secolo") piuttosto che rischiare un numero sbagliato.
-    4. Se il testo originale contiene un errore palese, correggilo silenziosamente basandoti sulla tua conoscenza enciclopedica.
+    4. Se il testo originale contiene un errore palese, correggilo basandoti sulla tua conoscenza enciclopedica.
     """
 
     # --- Template Pattern ---
     constraints = """
     VINCOLI DI LUNGHEZZA E FORMATO (OBBLIGATORI):
     1. LUNGHEZZA: Devi generare un testo di ALMENO 130-150 parole. Se il testo originale è breve, USA LE TUE CONOSCENZE per arricchirlo con dettagli storici, curiosità e descrizioni visive pertinenti.
-    2. CHUNKING: Dividi il testo in una lista di frasi brevi (massimo 180 caratteri l'una) per la sintesi vocale.
-    3. AUDIO CLEANING: 
+    2. AUDIO CLEANING: 
        - Scrivi i numeri in lettere se necessario per la fluidità.
        - Niente parentesi, caratteri speciali o elenchi puntati.
-    4. Ogni frase deve avere senso compiuto.
+    3. Ogni frase deve avere senso compiuto.
     """
 
-    # --- 4. TEMPLATE JSON ---
-    json_format = """
-    OUTPUT JSON RICHIESTO (Non aggiungere altro testo):
-    {
-        "full_text_optimized": "Il testo completo (lungo almeno 130 parole), coinvolgente e discorsivo.",
-        "tts_chunks": [
-            "Frase 1 (breve e pulita).",
-            "Frase 2 (breve e pulita).",
-            "..."
-        ]
-    }
-    """
 
     # --- Costruzione Prompt ---
     user_prompt = f"""
@@ -65,25 +51,20 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
     {guidelines}
     {fact_checking_protocol}
     {constraints}
-    {json_format}
     
-    Rispondi SOLO col JSON.
+    Rispondi SOLO con il testo ottimizzato.
     """
 
     try:
-        # 4. CHIAMATA ASTRATTA TRAMITE FACTORY
         llm_engine = LLMFactory.get_engine()
         
-        # Passiamo system_prompt e user_prompt separati
         raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
         
-        # 5. PARSING E PULIZIA (Logica invariata)
-        clean_json = raw_content.replace("```json", "").replace("```", "").strip()
-        data = json.loads(clean_json)
+        chunks = smart_chunking(raw_content)
         
         return DescriptionResponse(
-            full_text_optimized=data.get("full_text_optimized", original_text),
-            tts_chunks=data.get("tts_chunks", [original_text])
+            full_text_optimized=raw_content,
+            tts_chunks=chunks
         )
 
     except Exception as e:

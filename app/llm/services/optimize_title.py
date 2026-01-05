@@ -3,9 +3,7 @@ from app.schemas import TitleResponse
 from app.llm.factory import LLMFactory  
 
 def generate_optimized_title(original_title: str) -> TitleResponse:
-    
-    # 1. SYSTEM PROMPT: Definizione Persona e Audience
-    # È meglio tenere qui le regole generali di comportamento
+    # 1. PERSONA & STILE
     system_role = (
         "Sei uno storico dell'arte specializzato in turismo ed in storytelling. "
         "Il tuo stile è conciso, evocativo e moderno. "
@@ -28,7 +26,7 @@ def generate_optimized_title(original_title: str) -> TitleResponse:
     }
     """
 
-    # 3. USER PROMPT: Il Task specifico (COSA fare ora)
+    # 3. USER PROMPT
     user_prompt = f"""
     ANALISI CONTESTO: Il titolo attuale '{original_title}' è troppo generico o poco attraente.
     OBIETTIVO: Generare varianti che spingano l'utente a cliccare per saperne di più.
@@ -43,15 +41,10 @@ def generate_optimized_title(original_title: str) -> TitleResponse:
     print(f"Ottimizzazione titolo '{original_title}' in corso...")
 
     try:
-        # 4. CHIAMATA ASTRATTA
-        # Otteniamo il motore configurato (Ollama, OpenAI, ecc.)
         llm_engine = LLMFactory.get_engine()
         
-        # Generiamo la risposta
         raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
         
-        # 5. PARSING E PULIZIA
-        # Rimuoviamo eventuali backtick del markdown (spesso i modelli aggiungono ```json)
         clean_json = raw_content.replace("```json", "").replace("```", "").strip()
         data = json.loads(clean_json)
         

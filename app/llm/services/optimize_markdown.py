@@ -2,14 +2,8 @@ from app.llm.factory import LLMFactory
 from app.schemas import MarkdownFixResponse
 import logging
 
-# Scegli il modello
-MODEL_NAME = "qwen2.5:7b" 
-
-def fix_text_logic(text: str, tone: str) -> str:
-    """
-    Invia il testo a Ollama per la correzione ortografica, grammaticale 
-    e di formattazione Markdown.
-    """
+def fix_markdown(text: str, tone: str) -> str:
+ 
     print(f"FIXING MARKDOWN (Tone: {tone})...")
 
     system_prompt = (
@@ -23,14 +17,9 @@ def fix_text_logic(text: str, tone: str) -> str:
     )
 
     try:
-        # 2. Ottieni il motore attivo (Astrazione)
         llm_engine = LLMFactory.get_engine()
-        
-        # 3. Genera il testo usando l'interfaccia generica
-        # Non ci interessa se dietro c'è Ollama, GPT-4 o un Mock
         fixed_content = llm_engine.generate(prompt=text, system_prompt=system_prompt)
-        
-       
+               
         return MarkdownFixResponse(
             original_text=text,
             fixed_text=fixed_content,
@@ -42,12 +31,11 @@ def fix_text_logic(text: str, tone: str) -> str:
         error_str = str(e)
         print(f"Errore LLM Fix: {error_str}")
         
-        # Capiamo che tipo di errore è
         friendly_error = "Errore generico AI."
         if "Connection refused" in error_str or "No connection" in error_str:
             friendly_error = "Impossibile connettersi a Ollama. Assicurati che sia attivo."
         elif "model" in error_str and "not found" in error_str:
-            friendly_error = f"Modello '{MODEL_NAME}' non trovato."
+            friendly_error = "Modello non trovato."
 
         # CASO ERRORE (Restituiamo comunque il testo originale per non interrompere il flusso)
         return MarkdownFixResponse(
