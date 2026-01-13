@@ -2,7 +2,7 @@ import json
 from app.schemas import TitleResponse
 from app.llm.factory import LLMFactory  
 
-def generate_optimized_title(original_title: str) -> TitleResponse:
+def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b") -> TitleResponse:
     # 1. PERSONA & STILE
     system_role = (
         "Sei uno storico dell'arte specializzato in turismo ed in storytelling. "
@@ -41,17 +41,31 @@ def generate_optimized_title(original_title: str) -> TitleResponse:
     print(f"Ottimizzazione titolo '{original_title}' in corso...")
 
     try:
-        llm_engine = LLMFactory.get_engine()
+        llm_engine = LLMFactory.get_engine(model_name)
         
         raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
         
         clean_json = raw_content.replace("```json", "").replace("```", "").strip()
         data = json.loads(clean_json)
         
+        raw_options = data.get("options", [original_title])
+        sanitized_options = []
+        
+        for item in raw_options:
+            if isinstance(item, str):
+                sanitized_options.append(item)
+            elif isinstance(item, dict):
+                # Se è un dizionario (es. {'text': 'Titolo'}), prendiamo il primo valore
+                val = list(item.values())[0] if item else original_title
+                sanitized_options.append(str(val))
+            else:
+                sanitized_options.append(str(item))
+
         return TitleResponse(
             original=original_title,
-            options=data.get("options", [original_title]),
-            best_option=data.get("best_option", original_title)
+            options=sanitized_options,
+            best_option=data.get("best_option", original_title),
+            model_used=model_name
         )
 
     except Exception as e:
@@ -60,5 +74,6 @@ def generate_optimized_title(original_title: str) -> TitleResponse:
         return TitleResponse(
             original=original_title,
             options=[original_title], 
-            best_option=original_title
+            best_option=original_title,
+            model_used=f"Error ({model_name}) - Fallback"
         )

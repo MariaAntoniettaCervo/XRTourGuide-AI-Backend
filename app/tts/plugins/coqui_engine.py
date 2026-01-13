@@ -10,7 +10,7 @@ from TTS.tts.models.xtts import Xtts
 from app.interfaces.tts_interface import TTSInterface
 from app.tts.text_normalizer import TextNormalizer
 from app.utils.audio_converter import AudioConverter
-from app.settings import global_settings
+from app.app_config import global_settings
 from app.utils.text_processing import smart_chunking
 
 class CoquiTTS(TTSInterface):

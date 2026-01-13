@@ -2,7 +2,7 @@ from app.llm.factory import LLMFactory
 from app.schemas import MarkdownFixResponse
 import logging
 
-def fix_markdown(text: str, tone: str) -> str:
+def fix_markdown(text: str, tone: str, model_name: str = "qwen2.5:7b") -> str:
  
     print(f"FIXING MARKDOWN (Tone: {tone})...")
 
@@ -17,7 +17,7 @@ def fix_markdown(text: str, tone: str) -> str:
     )
 
     try:
-        llm_engine = LLMFactory.get_engine()
+        llm_engine = LLMFactory.get_engine(model_name)
         fixed_content = llm_engine.generate(prompt=text, system_prompt=system_prompt)
                
         return MarkdownFixResponse(

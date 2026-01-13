@@ -50,7 +50,7 @@ class PiperTTS(TTSInterface):
             except subprocess.CalledProcessError as e:
                 print(f"ERRORE CRITICO: Impossibile installare piper-tts automaticamente.\nEsegui manualmente: pip install piper-tts\nDettagli: {e}")
 
-    def generate_audio(self, text: str, output_filename: str) -> bool:
+    def generate_audio(self, text: str, output_filename: str, chunks: list = None, **kwargs) -> bool:
         """
         Implementazione del metodo obbligatorio dell'interfaccia TTSInterface.
         """
@@ -114,18 +114,16 @@ class PiperTTS(TTSInterface):
                 except Exception as e:
                     print(f"Impossibile rimuovere temp wav: {e}")
                 
-                return os.path.exists(output_filename)
+                if os.path.exists(output_filename):
+                    return output_filename
             
-            return False
+            raise Exception("Conversione MP3 fallita")
 
         except subprocess.CalledProcessError as e:
             err_msg = e.stderr.decode('utf-8', errors='ignore')
             print(f"Errore Processo Piper/FFmpeg: {err_msg}")
+            raise e # Rilanciamo l'errore per farlo vedere al worker
             
-            if "No module named piper" in err_msg:
-                print("SUGGERIMENTO: Prova a riavviare il server dopo l'installazione automatica.")
-                
-            return False
         except Exception as e:
             print(f"Errore Generico Piper Plugin: {e}")
-            return False
+            raise e

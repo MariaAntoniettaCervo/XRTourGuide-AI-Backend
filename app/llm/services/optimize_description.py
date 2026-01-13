@@ -3,7 +3,7 @@ import json
 from app.schemas import DescriptionResponse
 from app.utils.text_processing import smart_chunking
 
-def generate_optimized_description(original_text: str) -> DescriptionResponse:
+def generate_optimized_description(original_text: str, model_name: str = "qwen2.5:7b") -> DescriptionResponse:
     
     # --- PERSONA & STILE --- Pattern Persona ed Audience
     system_role = (
@@ -56,7 +56,7 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
     """
 
     try:
-        llm_engine = LLMFactory.get_engine()
+        llm_engine = LLMFactory.get_engine(model_name)
         
         raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
         
@@ -64,7 +64,8 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
         
         return DescriptionResponse(
             full_text_optimized=raw_content,
-            tts_chunks=chunks
+            tts_chunks=chunks,
+            model_used=model_name
         )
 
     except Exception as e:
@@ -72,5 +73,6 @@ def generate_optimized_description(original_text: str) -> DescriptionResponse:
         # Fallback sicuro
         return DescriptionResponse(
             full_text_optimized=original_text,
-            tts_chunks=[original_text]
+            tts_chunks=[original_text],
+            model_used=f"Error ({model_name}) - Fallback to Original"
         )

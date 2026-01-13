@@ -10,7 +10,8 @@ from app.schemas import (
     TitleRequest, TitleResponse, 
     DescriptionRequest, DescriptionResponse,
     AudioGenerationRequest, AudioGenerationResponse,
-    MarkdownFixRequest, MarkdownFixResponse
+    MarkdownFixRequest, MarkdownFixResponse,
+    TTSModelEnum # Importiamo l'Enum
 )
 
 # Factory
@@ -25,7 +26,6 @@ from app.llm.services.optimize_markdown import fix_markdown
 from app.storage import check_file_exists, get_file_url, upload_file, delete_file, save_json_to_minio, get_json_from_minio, init_storage
 
 # --- GLOBAL LOCK PER TTS ---
-# Assicura che avvenga solo UNA generazione pesante alla volta
 tts_lock = asyncio.Lock()
 
 # --- LIFESPAN ---
@@ -33,32 +33,32 @@ tts_lock = asyncio.Lock()
 async def lifespan(app: FastAPI):
     print("Avvio Backend XRTourGuide...")
     init_storage()
-    
     yield
     print("Shutdown Backend.")
 
 app = FastAPI(title="XRTourGuide API", lifespan=lifespan)
 
-async def background_audio_task(text_to_read: str, object_name: str, local_temp: str):
-    
-    text_hash = hashlib.md5(text_to_read.encode('utf-8')).hexdigest()
-    json_object_name = f"{text_hash}.json"
-    error_object_name = f"{text_hash}.err"
+# --- WORKER TASK ---
+
+async def background_audio_task(text_to_read: str, object_name: str, local_temp: str, engine_name: str):
+       
+    json_object_name = f"{hashlib.md5(text_to_read.encode('utf-8')).hexdigest()}.json"
+    error_object_name = object_name.replace(".mp3", ".err")
     
     async with tts_lock:
         try:
-            tts_engine = TTSFactory.get_engine()
+
+            print(f"WORKER: Richiesto engine {engine_name}")
+            tts_engine = TTSFactory.get_engine(engine_name)
             
-            # 1. Recupero Dati 
+            # Recupero chunks salvati (se esistono)
             loaded_chunks = []
-            
             if check_file_exists(json_object_name):
                 print(f"WORKER: Trovato copione JSON {json_object_name}")
                 data = get_json_from_minio(json_object_name)
-                # Recuperiamo i chunks se esistono, altrimenti lista vuota
                 loaded_chunks = data.get("tts_chunks", [])
             
-            print(f"WORKER: Avvio Engine TTS...")
+            print(f"WORKER: Avvio Generazione...")
             
             loop = asyncio.get_event_loop()
             success = await loop.run_in_executor(
@@ -80,13 +80,11 @@ async def background_audio_task(text_to_read: str, object_name: str, local_temp:
 
         except Exception as e:
             print(f"WORKER ERROR: {e}")
-            # Creazione file .err
             local_err = local_temp.replace(".mp3", ".err")
             with open(local_err, "w") as f:
                 f.write(str(e))
             upload_file(local_err, error_object_name)
             
-            # Pulizia
             if os.path.exists(local_temp): os.remove(local_temp)
             if os.path.exists(local_err): os.remove(local_err)
 
@@ -97,50 +95,53 @@ def root():
     return {
         "status": "online", 
         "service": "XRTourGuide AI Backend", 
-        "version": "2.0 (Modular)"
+        "version": "2.1 (Multi-Model Support)"
     }
 
 @app.post("/generate-audio", response_model=AudioGenerationResponse, status_code=202)
 async def generate_audio(request: AudioGenerationRequest, background_tasks: BackgroundTasks):
-    
 
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=400, detail="Testo vuoto")
-
-    text_hash = hashlib.md5(request.text.encode('utf-8')).hexdigest()
+    
+    # Calcolo Hash unico basato su testo + motore
+    combo_string = f"{request.text}_{request.tts_engine.value}"
+    text_hash = hashlib.md5(combo_string.encode('utf-8')).hexdigest()
+    
     object_name = f"{text_hash}.mp3"
     error_object_name = f"{text_hash}.err"
     audio_url = get_file_url(object_name)
-
 
     if check_file_exists(object_name):
         return AudioGenerationResponse(
             audio_url=audio_url,
             status="ready",
-            message="Audio pronto."
+            message=f"Audio già pronto (generato con {request.tts_engine.value})."
         )
     
-    # 2. CONTROLLO ERRORE 
+    # Gestione Retry ed Errori
     if check_file_exists(error_object_name):
-        # Se l'utente NON ha chiesto il retry esplicito, restituiamo l'errore
         if not request.retry:
-            print(f"RITORNO ERRORE: Trovato {error_object_name}")
             return AudioGenerationResponse(
-                audio_url="", # Nessun audio disponibile
+                audio_url="",
                 status="error",
-                message="La generazione precedente è fallita. Invia 'retry': true per riprovare."
+                message="Errore precedente. Invia 'retry': true."
             )
         else:
-            # Se l'utente HA chiesto retry, cancelliamo l'errore e procediamo
-            print(f"RETRY RICHIESTO: Cancello {error_object_name} e riprovo.")
             try: delete_file(error_object_name)
             except: pass
 
-    # 3. AVVIO GENERAZIONE (Nuova o Retry)
+    # Avvio Task
     local_temp = f"temp_{text_hash}.mp3"
+    print(f"NEW REQUEST: Audio '{request.tts_engine.value}' per '{request.text[:15]}...'")
     
-    print(f"NEW REQUEST: Accodata generazione per '{request.text[:15]}...'")
-    background_tasks.add_task(background_audio_task, request.text, object_name, local_temp)
+    background_tasks.add_task(
+        background_audio_task, 
+        request.text, 
+        object_name, 
+        local_temp, 
+        request.tts_engine.value
+    )
     
     return AudioGenerationResponse(
         audio_url=audio_url,
@@ -151,44 +152,38 @@ async def generate_audio(request: AudioGenerationRequest, background_tasks: Back
 
 @app.post("/optimize/title", response_model=TitleResponse)
 async def optimize_title_endpoint(request: TitleRequest):
-    """
-        Riceve un titolo scritto dall'autore del tour e ne restituisce 3 varianti ottimizzate secondo i patter scelti
-    """
-
     if not request.original_title:
         raise HTTPException(status_code=400, detail="Il titolo non può essere vuoto")
         
-    result = generate_optimized_title(request.original_title)
+    result = generate_optimized_title(request.original_title, model_name=request.model.value)
     
+    if not hasattr(result, "model_used"):
+         pass 
+
     return result
 
 @app.post("/optimize/description", response_model=DescriptionResponse)
 async def optimize_description_endpoint(request: DescriptionRequest):
-
     if not request.original_text:
         raise HTTPException(status_code=400, detail="Il testo non può essere vuoto")
     
+    result = generate_optimized_description(request.original_text, model_name=request.model.value)
+
+    # Salvataggio chunks 
     text_hash = hashlib.md5(request.original_text.encode('utf-8')).hexdigest()
     json_object_name = f"{text_hash}.json"
     
-    result = generate_optimized_description(request.original_text)
-
     payload_to_save = {
         "full_text_optimized": result.full_text_optimized,
         "tts_chunks": result.tts_chunks
     }
-    
     save_json_to_minio(payload_to_save, json_object_name)
     
     return result
 
 @app.post("/optimize-markdown", response_model=MarkdownFixResponse)
 async def fix_markdown_endpoint(request: MarkdownFixRequest):
-    """
-    Riceve un testo Markdown, se presenta errori lo corregge con l'AI 
-    e restituisce la versione pulita.
-    """
-    return fix_markdown(request.text, request.tone)
+    return fix_markdown(request.text, request.tone, model_name=request.model.value)
 
 
 if __name__ == "__main__":
