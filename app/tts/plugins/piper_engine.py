@@ -6,19 +6,39 @@ from app.interfaces.tts_interface import TTSInterface
 from app.tts.text_normalizer import TextNormalizer
 
 class PiperTTS(TTSInterface):
+    """
+    Wrapper per il motore TTS 'Piper' (Lightweight & Fast).
+
+    A differenza di Coqui (che gira in-process), questa classe agisce come un 
+    orchestratore di processi CLI. Esegue il binario di Piper per generare l'audio 
+    e successivamente FFmpeg per la codifica, mantenendo il consumo di RAM 
+    vicino allo zero quando non è in uso.
+
+    Features:
+    - **Self-Healing Dependency:** Controlla e installa automaticamente la libreria `piper-tts` se mancante.
+    - **Process Isolation:** L'eventuale crash del motore C++ di Piper non fa crashare il server Python principale.
+    - **Zero-Idle RAM:** Non mantiene modelli caricati in memoria tra una richiesta e l'altra.
+    
+    Attributes:
+        model_path (str): Percorso assoluto al file .onnx del modello vocale.
+        ffmpeg_path (str): Percorso dell'eseguibile FFmpeg (locale o di sistema).
+    """
+
     def __init__(self):
         print("Inizializzazione Plugin Piper TTS...")
         
-        # --- AUTO-INSTALLAZIONE LIBRERIA ---
+        # --- AUTO-INSTALLAZIONE LIBRERIA (Self-Healing) ---
+        # Verifica se l'ambiente ha i pacchetti necessari, altrimenti li scarica al volo.
         self._ensure_piper_installed()
 
         # 1. Calcolo Percorsi Assoluti
+        # Risaliamo la struttura delle directory per trovare la root del progetto
         current_dir = os.path.dirname(os.path.abspath(__file__)) 
         tts_dir = os.path.dirname(current_dir)                   
         app_dir = os.path.dirname(tts_dir)                       
         self.project_root = os.path.dirname(app_dir)             
         
-        # 2. Percorso Modello (Piper)
+        # 2. Percorso Modello (Piper richiede path assoluti per sicurezza)
         self.model_path = os.path.join(self.project_root, "models", "it_IT-paola-medium.onnx")
         
         if not os.path.exists(self.model_path):
@@ -26,18 +46,18 @@ class PiperTTS(TTSInterface):
             print("   -> Scaricalo e mettilo nella cartella 'models/'.")
 
         # 3. Percorso FFmpeg
+        # Cerchiamo prima un ffmpeg locale (per deployment portatili), poi quello di sistema
         self.ffmpeg_path = os.path.join(self.project_root, "bin", "ffmpeg.exe")
         
-        # Fallback sistema
         if not os.path.exists(self.ffmpeg_path):
-            self.ffmpeg_path = "ffmpeg"
+            self.ffmpeg_path = "ffmpeg" # Fallback al PATH di sistema
 
         self.normalizer = TextNormalizer()
 
     def _ensure_piper_installed(self):
         """
-        Controlla se la libreria 'piper' è installata.
-        Se manca, la installa automaticamente tramite pip.
+        Controlla la presenza della libreria 'piper-tts'.
+        Se assente, lancia un sottoprocesso pip per installarla senza riavviare il server.
         """
         spec = importlib.util.find_spec("piper")
         
@@ -52,38 +72,49 @@ class PiperTTS(TTSInterface):
 
     def generate_audio(self, text: str, output_filename: str, chunks: list = None, **kwargs) -> bool:
         """
-        Implementazione del metodo obbligatorio dell'interfaccia TTSInterface.
+        Esegue la pipeline di generazione: Normalizzazione -> Piper (WAV) -> FFmpeg (MP3).
+
+        Args:
+            text (str): Il testo da leggere.
+            output_filename (str): Path finale del file audio.
+            chunks (list, optional): Ignorato da Piper (che gestisce lo stream internamente), 
+                                     ma mantenuto per compatibilità con l'interfaccia.
+
+        Returns:
+            bool | str: Restituisce il path del file se successo, o lancia Exception.
         """
         
         # --- NORMALIZZAZIONE ---
         testo_processato = self.normalizer.clean_text(text)
         
         is_mp3 = output_filename.endswith(".mp3")
-        # Se è mp3, creiamo prima un wav temporaneo
+        # Piper genera solo WAV raw. Se serve MP3, usiamo un file temporaneo.
         wav_temp = output_filename.replace(".mp3", ".wav") if is_mp3 else output_filename
         
-        # Comando per eseguire piper come modulo
+        # Costruzione comando CLI
+        # Eseguiamo piper come modulo (python -m piper) per evitare problemi di PATH
         comando_piper = [
             sys.executable, "-m", "piper",
             "--model", self.model_path,
             "--output_file", wav_temp,
-            "--sentence_silence", "0.5"
+            "--sentence_silence", "0.5" # Pausa fissa tra frasi
         ]
 
-        # Configurazione ambiente per UTF-8 (importante per Windows)
+        # Configurazione ambiente per UTF-8 
+        # CRITICO SU WINDOWS: Senza questo, le lettere accentate italiane fanno crashare la pipe.
         my_env = os.environ.copy()
         my_env["PYTHONUTF8"] = "1"
         my_env["PYTHONIOENCODING"] = "utf-8"
 
         try:
-            # 1. Genera WAV con Piper
+            # 1. Genera WAV con Piper (Subprocess Blocking)
             subprocess.run(
                 comando_piper, 
                 input=testo_processato.encode('utf-8'),
                 env=my_env,
                 check=True,
-                stdout=subprocess.DEVNULL, # Silenzia output standard
-                stderr=subprocess.PIPE     # Cattura errori
+                stdout=subprocess.DEVNULL, # Silenzia output standard per pulizia log
+                stderr=subprocess.PIPE     # Cattura errori per debugging
             )
             
             # Se l'output richiesto era WAV, abbiamo finito
@@ -96,8 +127,8 @@ class PiperTTS(TTSInterface):
                     self.ffmpeg_path,
                     "-i", wav_temp,
                     "-y",                 # Sovrascrivi senza chiedere
-                    "-b:a", "128k",       # Bitrate
-                    "-af", "adelay=200|200", # Aggiunge 200ms di silenzio all'inizio
+                    "-b:a", "128k",       # Bitrate standard per voce
+                    "-af", "adelay=200|200", # Aggiunge 200ms di silenzio all'inizio (anti-clipping player)
                     output_filename
                 ]
                 
@@ -109,6 +140,7 @@ class PiperTTS(TTSInterface):
                 )
                 
                 # --- PULIZIA ---
+                # Rimuoviamo il WAV pesante intermedio
                 try:
                     os.remove(wav_temp)
                 except Exception as e:
@@ -117,12 +149,13 @@ class PiperTTS(TTSInterface):
                 if os.path.exists(output_filename):
                     return output_filename
             
-            raise Exception("Conversione MP3 fallita")
+            raise Exception("Conversione MP3 fallita (File non creato)")
 
         except subprocess.CalledProcessError as e:
+            # Decodifica l'errore dallo stderr del sottoprocesso
             err_msg = e.stderr.decode('utf-8', errors='ignore')
             print(f"Errore Processo Piper/FFmpeg: {err_msg}")
-            raise e # Rilanciamo l'errore per farlo vedere al worker
+            raise e 
             
         except Exception as e:
             print(f"Errore Generico Piper Plugin: {e}")

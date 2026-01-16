@@ -1,6 +1,22 @@
 import re
 
 class TextNormalizer:
+
+    """
+    Pre-processore linguistico per ottimizzare il testo per la Sintesi Vocale (TTS).
+
+    Il suo compito principale è trasformare termini ambigui, acronimi, 
+    parole straniere o latine nella loro **rappresentazione fonetica italiana**.
+    
+    Perché è necessario?
+    I modelli TTS (come Piper o Coqui) addestrati in italiano spesso:
+    1. Leggono l'inglese "come si scrive" (es. "Wi-Fi" -> "Vifi").
+    2. Sbagliano l'accento sulle parole latine (es. "Insula" -> "Insulà").
+    3. Non sanno espandere le abbreviazioni (es. "d.C." -> "dici").
+
+    Questa classe risolve questi problemi prima ancora che l'audio venga generato.
+    """
+
     def __init__(self):
         self.replacements = {}
         

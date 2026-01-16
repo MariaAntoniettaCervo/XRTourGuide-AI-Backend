@@ -26,7 +26,7 @@ class Settings:
         self.minio_secure = secure_env.lower() == "true"
 
         # Defaults
-        self.tts_engine = "coqui-xtts" # Nota: Aggiornato per combaciare con l'Enum
+        self.tts_engine = "coqui-xtts"
         self.llm_model_name = "qwen2.5:7b"
         
         self.load()

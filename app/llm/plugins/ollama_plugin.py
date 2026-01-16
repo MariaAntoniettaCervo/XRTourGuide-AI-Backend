@@ -4,7 +4,6 @@ from app.app_config import global_settings
 
 class OllamaLLM(LLMInterface):
     
-    # MODIFICA QUI: Aggiungiamo 'model' ai parametri accettati
     def __init__(self, model_name: str = None, model: str = None):
         """
         Inizializza il plugin.

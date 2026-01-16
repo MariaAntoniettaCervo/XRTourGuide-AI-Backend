@@ -3,7 +3,35 @@ from app.schemas import TitleResponse
 from app.llm.factory import LLMFactory  
 
 def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b") -> TitleResponse:
-    # 1. PERSONA & STILE
+    """
+    Genera varianti creative (Copywriting) di un titolo turistico utilizzando un LLM.
+
+    Questa funzione trasforma un titolo generico (es. "Chiesa San Marco") in opzioni 
+    più accattivanti per un'app mobile (es. "I Segreti di San Marco").
+    Utilizza tecniche di Prompt Engineering per forzare l'output in formato JSON 
+    strutturato, facilitando il parsing da parte del backend.
+
+    Args:
+        original_title (str): Il titolo originale da migliorare.
+        model_name (str, optional): Il modello da usare. Default: "qwen2.5:7b".
+
+    Returns:
+        TitleResponse: Oggetto contenente:
+            - options: Lista di 3 varianti (Corto, Evocativo, Domanda).
+            - best_option: La variante consigliata dall'AI.
+            - original: Il titolo di partenza.
+
+    Behavior:
+        - **JSON Enforcement:** Il prompt include istruzioni rigide per ottenere solo JSON valido.
+        - **Sanitization:** Pulisce l'output da eventuali marcatori Markdown (```json).
+        - **Defensive Parsing:** Controlla che ogni opzione sia una stringa pura. Se il modello
+          sbaglia e restituisce oggetti annidati, il codice tenta di estrarne comunque il testo.
+        - **Fallback:** In caso di JSON malformato o errore di rete, restituisce il titolo 
+          originale come unica opzione, garantendo che l'UI non rimanga vuota.
+    """
+
+    # --- 1. PERSONA & STILE (Persona Pattern) ---
+    # Definiamo chi sta parlando per influenzare lo stile delle risposte.
     system_role = (
         "Sei uno storico dell'arte specializzato in turismo ed in storytelling. "
         "Il tuo stile è conciso, evocativo e moderno. "
@@ -12,7 +40,8 @@ def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b"
         "Evita linguaggio troppo accademico o troppo formale."
     )
 
-    # 2. TEMPLATE JSON (Istruzioni di formato)
+    # --- 2. TEMPLATE JSON (Format Constraint Pattern) ---
+    # Forniamo un esempio esplicito di cosa ci aspettiamo per ridurre errori di parsing.
     json_template = """
     FORMATO OUTPUT RICHIESTO (JSON PURO):
     Devi restituire SOLO un oggetto JSON con questa struttura esatta:
@@ -26,7 +55,7 @@ def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b"
     }
     """
 
-    # 3. USER PROMPT
+    # --- 3. USER PROMPT ---
     user_prompt = f"""
     ANALISI CONTESTO: Il titolo attuale '{original_title}' è troppo generico o poco attraente.
     OBIETTIVO: Generare varianti che spingano l'utente a cliccare per saperne di più.
@@ -43,11 +72,17 @@ def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b"
     try:
         llm_engine = LLMFactory.get_engine(model_name)
         
+        # Generazione Raw
         raw_content = llm_engine.generate(prompt=user_prompt, system_prompt=system_role)
         
+        # --- 4. CLEANING & PARSING ---
+        # Rimuove i backticks tipici delle risposte Markdown (es. ```json ... ```)
         clean_json = raw_content.replace("```json", "").replace("```", "").strip()
         data = json.loads(clean_json)
         
+        # --- 5. DATA NORMALIZATION (Defensive Programming) ---
+        # A volte i modelli piccoli (7b) sbagliano formato e mettono dizionari dentro la lista.
+        # Questo ciclo normalizza tutto in stringhe semplici.
         raw_options = data.get("options", [original_title])
         sanitized_options = []
         
@@ -70,7 +105,8 @@ def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b"
 
     except Exception as e:
         print(f"Errore generazione titoli: {e}")
-        # Fallback sicuro: restituisci il titolo originale come unica opzione
+        # --- FALLBACK ---
+        # Se tutto fallisce, l'utente vede il titolo originale.
         return TitleResponse(
             original=original_title,
             options=[original_title], 
