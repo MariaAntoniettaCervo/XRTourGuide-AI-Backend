@@ -81,7 +81,11 @@ class PiperTTS(TTSInterface):
                                      ma mantenuto per compatibilità con l'interfaccia.
 
         Returns:
-            bool | str: Restituisce il path del file se successo, o lancia Exception.
+        bool: True se il file audio è stato generato correttamente, False in caso di
+              errore (subprocess fallito, file non creato, ecc.). Eventuali eccezioni
+              vengono catturate internamente e non propagate, rispettando il contratto
+              dichiarato da TTSInterface.generate_audio.
+
         """
         
         # --- NORMALIZZAZIONE ---
@@ -147,16 +151,17 @@ class PiperTTS(TTSInterface):
                     print(f"Impossibile rimuovere temp wav: {e}")
                 
                 if os.path.exists(output_filename):
-                    return output_filename
+                    return True
             
-            raise Exception("Conversione MP3 fallita (File non creato)")
-
+            print("Errore Piper: conversione MP3 fallita (file non creato)")
+            return False
+        
         except subprocess.CalledProcessError as e:
             # Decodifica l'errore dallo stderr del sottoprocesso
             err_msg = e.stderr.decode('utf-8', errors='ignore')
             print(f"Errore Processo Piper/FFmpeg: {err_msg}")
-            raise e 
-            
+            return False 
+         
         except Exception as e:
             print(f"Errore Generico Piper Plugin: {e}")
-            raise e
+            return False
