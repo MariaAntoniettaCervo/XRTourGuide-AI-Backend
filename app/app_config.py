@@ -19,7 +19,7 @@ class Settings:
 
         self.minio_access_key = os.getenv("MINIO_ROOT_USER", os.getenv("MINIO_ACCESS_KEY", "minioadmin"))
         self.minio_secret_key = os.getenv("MINIO_ROOT_PASSWORD", os.getenv("MINIO_SECRET_KEY", "minioadmin"))
-        self.minio_bucket = os.getenv("AWS_STORAGE_BUCKET_NAME", os.getenv("MINIO_BUCKET", "tour-guide-assets"))
+        self.minio_bucket = os.getenv("AWS_STORAGE_BUCKET_NAME", os.getenv("MINIO_BUCKET", "audio-tours"))
 
         # Defaults
         self.tts_engine = "coqui-xtts"
