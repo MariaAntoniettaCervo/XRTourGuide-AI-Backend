@@ -1,0 +1,104 @@
+Run_ID,Timestamp,Model,HardwareMode,final_score,ram_delta_gb,vram_delta_gb,json_valid,tts_score,tts_errors,fidelity_pct,missing_concepts,tps,load_time,size_gb,word_count,lexical_var_ttr,params,quant,family,narrative_preview
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+1,2026-07-12 17:25:02,qwen2.5:7b,gpu,337.4,0.68,4.63,True,75,['PARENTHESES'],40.0,"['usato', 'molto', 'primo', 'grande', 'secolo', 'giochi']",51.85,2.01,4.36,77,0.87,7.6B,Q4_K_M,qwen2,Immaginatevi un luogo dove l'epicurea Roma viveva ...
+1,2026-07-12 17:25:02,llama3.1:8b,gpu,359.48,0.57,4.95,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'primo']",48.33,11.88,4.58,95,0.8,8.0B,Q4_K_M,llama,"Immersi nella storia, il Colosseo rappresenta l'ap..."
+1,2026-07-12 17:25:02,mistral-nemo,gpu,308.56,1.87,6.31,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'giochi']",15.68,12.23,6.59,54,0.89,12.2B,Q4_0,llama,Immagina di camminare tra le antiche pietre del Co...
+1,2026-07-12 17:25:02,phi3.5,gpu,-525.38,0.42,3.02,False,75,['PARENTHESES'],80.0,"['usato', 'molto']",86.68,13.57,2.03,135,0.73,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Teatro ..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+2,2026-07-12 17:26:54,qwen2.5:7b,gpu,340.52,0.82,4.64,True,75,['NUMBERS(2)'],50.0,"['usato', 'molto', 'primo', 'grande', 'secolo']",46.37,5.9,4.36,73,0.86,7.6B,Q4_K_M,qwen2,Immaginatevi una piazza piena di spettacoli! Il Co...
+2,2026-07-12 17:26:54,llama3.1:8b,gpu,346.16,0.96,4.99,True,75,['NUMBERS(4)'],50.0,"['usato', 'molto', 'primo', 'grande', 'secolo']",46.77,6.08,4.58,81,0.81,8.0B,Q4_K_M,llama,"Immersi nel cuore di Roma, il Colosseo rappresenta..."
+2,2026-07-12 17:26:54,mistral-nemo,gpu,300.42,2.77,6.11,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'romano']",12.25,8.91,6.59,50,0.88,12.2B,Q4_0,llama,Immagina di trovarti al cospetto del più grande e ...
+2,2026-07-12 17:26:54,phi3.5,gpu,-593.49,0.48,2.98,False,50,"['NUMBERS(4)', 'PARENTHESES']",60.0,"['usato', 'molto', 'grande', 'giochi']",85.98,3.5,2.03,141,0.74,3.8B,Q4_0,phi3,"{   ""titolo"": ""La leggenda dell'Anfiteatro Romano:..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+3,2026-07-12 17:28:49,qwen2.5:7b,gpu,371.92,0.68,4.64,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'giochi']",50.58,6.09,4.36,126,0.77,7.6B,Q4_K_M,qwen2,Immaginatevi un luogo dove l'epica si fa carne! Il...
+3,2026-07-12 17:28:49,llama3.1:8b,gpu,335.22,0.69,4.96,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'primo']",48.16,5.64,4.58,60,0.9,8.0B,Q4_K_M,llama,"Immersi nel cuore di Roma, il Colosseo è un anfite..."
+3,2026-07-12 17:28:49,mistral-nemo,gpu,308.4,2.34,6.08,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'giochi']",13.99,8.91,6.59,54,0.89,12.2B,Q4_0,llama,Immagina di camminare attraverso le antiche pietre...
+3,2026-07-12 17:28:49,phi3.5,gpu,-649.99,0.33,3.01,False,50,"['NUMBERS(1)', 'PARENTHESES']",70.0,"['usato', 'molto', 'grande']",83.09,3.47,2.03,329,0.29,3.8B,Q4_0,phi3,"{   ""titolo"": ""La maestosa Arena di Roma: Il Cuore..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+4,2026-07-12 17:30:39,qwen2.5:7b,gpu,321.35,0.68,4.59,True,50,"['NUMBERS(2)', 'PARENTHESES']",60.0,"['usato', 'molto', 'anfiteatro', 'giochi']",47.48,5.51,4.36,70,0.84,7.6B,Q4_K_M,qwen2,Il Colosseo! Un simbolo di potenza e grandezza rom...
+4,2026-07-12 17:30:39,llama3.1:8b,gpu,380.36,0.71,4.96,True,75,['NUMBERS(4)'],60.0,"['usato', 'molto', 'primo', 'secolo']",46.52,6.0,4.58,101,0.71,8.0B,Q4_K_M,llama,"Il Colosseo, un simbolo della grandezza di Roma an..."
+4,2026-07-12 17:30:39,mistral-nemo,gpu,344.32,2.21,6.1,True,100,[],70.0,"['usato', 'molto', 'grande']",13.95,9.19,6.59,52,0.9,12.2B,Q4_0,llama,"Immagina di trovarti nel cuore di Roma, di fronte ..."
+4,2026-07-12 17:30:39,phi3.5,gpu,-521.64,0.34,2.97,False,75,['PARENTHESES'],80.0,"['usato', 'molto']",85.36,3.5,2.03,154,0.72,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Teatro ..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+5,2026-07-12 17:32:40,qwen2.5:7b,gpu,324.23,0.71,4.61,True,50,"['NUMBERS(3)', 'PARENTHESES']",50.0,"['usato', 'molto', 'romano', 'grande', 'giochi']",51.13,6.05,4.36,90,0.8,7.6B,Q4_K_M,qwen2,Immaginatevi un luogo dove la storia si svolge dav...
+5,2026-07-12 17:32:40,llama3.1:8b,gpu,355.39,0.63,4.96,True,75,['NUMBERS(4)'],60.0,"['usato', 'molto', 'primo', 'secolo']",47.37,5.91,4.58,65,0.88,8.0B,Q4_K_M,llama,"Immersi nel cuore della Roma antica, il Colosseo r..."
+5,2026-07-12 17:32:40,mistral-nemo,gpu,310.25,2.75,6.05,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'romano']",14.17,18.51,6.59,66,0.89,12.2B,Q4_0,llama,"Immagina di essere trasportato indietro nel tempo,..."
+5,2026-07-12 17:32:40,phi3.5,gpu,-644.19,0.05,2.96,False,50,"['NUMBERS(4)', 'PARENTHESES']",50.0,"['usato', 'molto', 'romano', 'grande', 'giochi']",79.65,3.57,2.03,74,0.82,3.8B,Q4_0,phi3,"{   ""titolo"": ""Le Tragiche Arene: Il Mitico Coloss..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+6,2026-07-12 17:34:31,qwen2.5:7b,gpu,307.89,0.63,4.62,True,50,"['NUMBERS(2)', 'PARENTHESES']",60.0,"['usato', 'molto', 'grande', 'giochi']",48.51,5.62,4.36,51,0.92,7.6B,Q4_K_M,qwen2,Il Colosseo! Un anfiteatro romano dal primo secolo...
+6,2026-07-12 17:34:31,llama3.1:8b,gpu,364.09,0.74,4.95,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'primo']",45.34,5.93,4.58,100,0.77,8.0B,Q4_K_M,llama,"Immersi nel cuore di Roma, il Colosseo è un simbol..."
+6,2026-07-12 17:34:31,mistral-nemo,gpu,264.5,2.58,6.08,True,75,['NUMBERS(2)'],50.0,"['usato', 'molto', 'romano', 'grande', 'giochi']",12.55,8.66,6.59,52,0.9,12.2B,Q4_0,llama,Immagina di trovarti al centro dell'enorme arena d...
+6,2026-07-12 17:34:31,phi3.5,gpu,-550.69,0.21,2.97,False,50,"['NUMBERS(4)', 'PARENTHESES']",80.0,"['usato', 'molto']",86.49,3.51,2.03,135,0.77,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Teatro ..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+7,2026-07-12 17:36:22,qwen2.5:7b,gpu,-634.0,0.68,4.63,False,50,"['NUMBERS(1)', 'PARENTHESES']",70.0,"['usato', 'molto', 'giochi']",50.47,5.35,4.36,94,0.76,7.6B,Q4_K_M,qwen2,"{   ""titolo"": ""La Grandiosa Arena di Roma"",   ""des..."
+7,2026-07-12 17:36:22,llama3.1:8b,gpu,309.66,0.39,4.96,True,50,"['NUMBERS(3)', 'PARENTHESES']",60.0,"['usato', 'molto', 'primo', 'secolo']",46.27,5.97,4.58,59,0.86,8.0B,Q4_K_M,llama,"Immersi nella storia, si erge il Colosseo, un anfi..."
+7,2026-07-12 17:36:22,mistral-nemo,gpu,306.16,2.76,6.08,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'giochi']",12.41,8.94,6.59,54,0.91,12.2B,Q4_0,llama,Immagina di camminare attraverso le antiche pietre...
+7,2026-07-12 17:36:22,phi3.5,gpu,493.0,0.56,2.95,True,100,[],70.0,"['usato', 'molto', 'giochi']",79.09,3.52,2.03,145,0.78,3.8B,Q4_0,phi3,"Immaginavi voi in un tempo lontano, nel cuore dell..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+8,2026-07-12 17:38:13,qwen2.5:7b,gpu,372.72,0.7,4.62,True,75,['NUMBERS(2)'],60.0,"['usato', 'molto', 'grande', 'giochi']",48.77,5.54,4.36,82,0.84,7.6B,Q4_K_M,qwen2,Immaginatevi un luogo dove l'epopea si svolgeva so...
+8,2026-07-12 17:38:13,llama3.1:8b,gpu,357.66,0.6,4.95,True,75,['NUMBERS(4)'],60.0,"['usato', 'molto', 'primo', 'secolo']",48.12,5.82,4.58,67,0.86,8.0B,Q4_K_M,llama,"Immersi nel cuore di Roma, il Colosseo rappresenta..."
+8,2026-07-12 17:38:13,mistral-nemo,gpu,318.56,0.99,6.08,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'giochi']",14.01,8.98,6.59,64,0.84,12.2B,Q4_0,llama,"Immagina di essere trasportato indietro nel tempo,..."
+8,2026-07-12 17:38:13,phi3.5,gpu,-580.08,0.5,2.95,False,50,"['NUMBERS(3)', 'PARENTHESES']",70.0,"['usato', 'molto', 'romano']",82.06,3.67,2.03,140,0.73,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Palcosc..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+9,2026-07-12 17:40:06,qwen2.5:7b,gpu,409.8,0.43,4.64,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'grande']",50.71,7.4,4.36,100,0.79,7.6B,Q4_K_M,qwen2,"Immagina di trovarvi nel cuore di Roma, davanti a ..."
+9,2026-07-12 17:40:06,llama3.1:8b,gpu,346.69,0.73,4.96,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'grande']",46.99,5.84,4.58,74,0.89,8.0B,Q4_K_M,llama,"Immersi nel cuore di Roma, il Colosseo è un monume..."
+9,2026-07-12 17:40:06,mistral-nemo,gpu,275.04,2.22,6.1,True,75,['NUMBERS(2)'],50.0,"['usato', 'molto', 'romano', 'grande', 'giochi']",14.99,9.0,6.59,58,0.91,12.2B,Q4_0,llama,Immagina di camminare attraverso l'enorme arena de...
+9,2026-07-12 17:40:06,phi3.5,gpu,-602.67,0.39,2.96,False,50,"['NUMBERS(5)', 'PARENTHESES']",80.0,"['molto', 'primo']",86.09,3.52,2.03,206,0.75,3.8B,Q4_0,phi3,"```json {   ""titolo"": ""La maestria dell'Anfiteatro..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+10,2026-07-12 17:41:57,qwen2.5:7b,gpu,333.4,0.69,4.61,True,75,['PARENTHESES'],50.0,"['usato', 'molto', 'romano', 'grande', 'giochi']",51.87,5.52,4.36,54,0.92,7.6B,Q4_K_M,qwen2,"Immaginatevi uno spettacolo epico! Il Colosseo, un..."
+10,2026-07-12 17:41:57,llama3.1:8b,gpu,346.26,0.63,4.94,True,50,"['NUMBERS(5)', 'PARENTHESES']",60.0,"['usato', 'molto', 'primo', 'grande']",48.28,5.9,4.58,108,0.72,8.0B,Q4_K_M,llama,"Sorge nel cuore di Roma, il Colosseo è un anfiteat..."
+10,2026-07-12 17:41:57,mistral-nemo,gpu,331.44,2.25,6.07,True,75,['NUMBERS(2)'],80.0,"['usato', 'molto']",14.9,9.41,6.59,55,0.91,12.2B,Q4_0,llama,Immagina di camminare tra le antiche pietre del Co...
+10,2026-07-12 17:41:57,phi3.5,gpu,-665.45,0.39,2.93,False,50,"['NUMBERS(1)', 'PARENTHESES']",50.0,"['usato', 'molto', 'grande', 'anfiteatro', 'giochi']",85.9,3.53,2.03,224,0.7,3.8B,Q4_0,phi3,"```json {   ""titolo"": ""La maestosa Arena di Roma: ..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+11,2026-07-12 17:43:48,qwen2.5:7b,gpu,361.23,0.71,4.62,True,75,['NUMBERS(1)'],60.0,"['usato', 'molto', 'primo', 'secolo']",51.92,5.72,4.36,64,0.88,7.6B,Q4_K_M,qwen2,"Immaginatevi una piazza piena di gente, un'energia..."
+11,2026-07-12 17:43:48,llama3.1:8b,gpu,404.31,0.72,4.97,True,75,['PARENTHESES'],70.0,"['usato', 'molto', 'primo']",48.26,5.64,4.58,104,0.73,8.0B,Q4_K_M,llama,"Immersi nel cuore di Roma, il Colosseo è un simbol..."
+11,2026-07-12 17:43:48,mistral-nemo,gpu,291.13,2.2,6.08,True,75,['NUMBERS(2)'],60.0,"['usato', 'molto', 'grande', 'giochi']",14.93,8.87,6.59,55,0.89,12.2B,Q4_0,llama,Immagina di camminare attraverso l'enorme arena de...
+11,2026-07-12 17:43:48,phi3.5,gpu,-539.93,0.36,2.96,False,75,['PARENTHESES'],90.0,['molto'],86.56,3.55,2.03,190,0.64,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Colosse..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+12,2026-07-12 17:45:38,qwen2.5:7b,gpu,380.38,0.67,4.64,True,75,['NUMBERS(3)'],70.0,"['usato', 'molto', 'giochi']",51.32,5.26,4.36,68,0.79,7.6B,Q4_K_M,qwen2,Immaginatevi un luogo dove l'epica si mescola con ...
+12,2026-07-12 17:45:38,llama3.1:8b,gpu,384.13,0.71,4.93,True,75,['PARENTHESES'],70.0,"['usato', 'molto', 'primo']",48.13,5.64,4.58,78,0.77,8.0B,Q4_K_M,llama,"Immersi nella storia, si erge il Colosseo, un anfi..."
+12,2026-07-12 17:45:38,mistral-nemo,gpu,322.25,2.21,6.09,True,75,['NUMBERS(2)'],70.0,"['usato', 'molto', 'giochi']",14.69,8.87,6.59,67,0.88,12.2B,Q4_0,llama,"Immagina di essere trasportato indietro nel tempo,..."
+12,2026-07-12 17:45:38,phi3.5,gpu,-551.09,0.41,2.93,False,50,"['NUMBERS(1)', 'PARENTHESES']",80.0,"['usato', 'molto']",86.16,3.51,2.03,150,0.78,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Teatro ..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+13,2026-07-12 17:47:29,qwen2.5:7b,gpu,368.82,0.74,4.63,True,75,['NUMBERS(1)'],50.0,"['usato', 'molto', 'primo', 'secolo', 'giochi']",51.08,5.32,4.36,127,0.73,7.6B,Q4_K_M,qwen2,Il Colosseo! Un simbolo di potenza e orgoglio roma...
+13,2026-07-12 17:47:29,llama3.1:8b,gpu,366.8,0.82,4.94,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'primo']",47.87,6.37,4.58,99,0.78,8.0B,Q4_K_M,llama,"Il Colosseo, simbolo della grandezza dell'Impero R..."
+13,2026-07-12 17:47:29,mistral-nemo,gpu,252.94,2.25,6.07,True,75,['NUMBERS(1)'],40.0,"['usato', 'molto', 'romano', 'primo', 'secolo', 'giochi']",14.54,8.86,6.59,59,0.86,12.2B,Q4_0,llama,Immagina di trovarti nel cuore pulsante dell'antic...
+13,2026-07-12 17:47:29,phi3.5,gpu,-552.73,0.41,2.91,False,50,"['NUMBERS(1)', 'PARENTHESES']",80.0,"['usato', 'molto']",86.07,3.51,2.03,110,0.75,3.8B,Q4_0,phi3,"{   ""titolo"": ""La maestria dell'Anfiteatro Romano:..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+14,2026-07-12 17:49:18,qwen2.5:7b,gpu,373.28,0.69,4.61,True,75,['NUMBERS(2)'],60.0,"['usato', 'molto', 'primo', 'giochi']",51.62,5.27,4.36,80,0.8,7.6B,Q4_K_M,qwen2,"Immaginatevi una piazza piena di gente, gridi e ru..."
+14,2026-07-12 17:49:18,llama3.1:8b,gpu,344.06,0.5,4.93,True,50,"['NUMBERS(1)', 'PARENTHESES']",60.0,"['usato', 'molto', 'primo', 'giochi']",48.15,5.66,4.58,141,0.67,8.0B,Q4_K_M,llama,"Il Colosseo, un simbolo della grandezza e potenza ..."
+14,2026-07-12 17:49:18,mistral-nemo,gpu,288.16,2.23,6.07,True,100,[],40.0,"['usato', 'molto', 'romano', 'grande', 'gladiatori', 'giochi']",15.0,8.88,6.59,53,0.92,12.2B,Q4_0,llama,Immagina di trovarti al cospetto del più famoso e ...
+14,2026-07-12 17:49:18,phi3.5,gpu,-570.12,0.39,2.92,False,50,"['NUMBERS(1)', 'PARENTHESES']",70.0,"['usato', 'molto', 'giochi']",87.78,3.51,2.03,120,0.75,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Teatro ..."
+
+
+------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------,------
+15,2026-07-12 17:51:09,qwen2.5:7b,gpu,-666.0,0.71,4.62,False,50,"['NUMBERS(4)', 'PARENTHESES']",50.0,"['usato', 'molto', 'primo', 'secolo', 'giochi']",51.63,5.02,4.36,100,0.76,7.6B,Q4_K_M,qwen2,"{   ""titolo"": ""La Gigantesca Arena di Roma"",   ""de..."
+15,2026-07-12 17:51:09,llama3.1:8b,gpu,365.21,0.68,4.97,True,50,"['NUMBERS(2)', 'PARENTHESES']",70.0,"['usato', 'molto', 'primo']",48.3,5.39,4.58,111,0.69,8.0B,Q4_K_M,llama,"Immersi nel cuore della Roma antica, il Colosseo è..."
+15,2026-07-12 17:51:09,mistral-nemo,gpu,288.94,2.29,6.1,True,75,['NUMBERS(2)'],60.0,"['usato', 'molto', 'grande', 'giochi']",14.28,8.9,6.59,54,0.89,12.2B,Q4_0,llama,Immagina di camminare attraverso l'enorme struttur...
+15,2026-07-12 17:51:09,phi3.5,gpu,-550.94,0.37,2.96,False,50,"['NUMBERS(4)', 'PARENTHESES']",80.0,"['usato', 'molto']",86.87,3.51,2.03,145,0.76,3.8B,Q4_0,phi3,"{   ""titolo"": ""La Grande Arena di Roma: Il Teatro ..."

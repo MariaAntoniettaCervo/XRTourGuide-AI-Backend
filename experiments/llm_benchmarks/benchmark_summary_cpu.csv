@@ -1,0 +1,5 @@
+Model,HardwareMode,total_runs,json_valid_runs,json_valid_rate,avg_final_score_valid_only
+qwen2.5:7b,cpu,15,12,0.8,293.96
+llama3.1:8b,cpu,15,15,1.0,310.09
+mistral-nemo,cpu,15,15,1.0,300.12
+phi3.5,cpu,15,0,0.0,N/A
