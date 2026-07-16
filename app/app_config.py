@@ -23,7 +23,7 @@ class Settings:
 
         # Defaults
         self.tts_engine = "coqui-xtts"
-        self.llm_model_name = "qwen2.5:7b"
+        self.llm_model_name = "llama3.1:8b"
 
         self.load()
 
@@ -33,7 +33,7 @@ class Settings:
                 with open(self.config_file, "r") as f:
                     data = json.load(f)
                     self.tts_engine = data.get("tts_engine", "coqui-xtts")
-                    self.llm_model_name = data.get("llm_model_name", "qwen2.5:7b")
+                    self.llm_model_name = data.get("llm_model_name", "llama3.1:8b")
             except Exception as e:
                 print(f"Errore caricamento config.json: {e}")
 

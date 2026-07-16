@@ -2,7 +2,7 @@ import json
 from app.schemas import TitleResponse
 from app.llm.factory import LLMFactory  
 
-def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b") -> TitleResponse:
+def generate_optimized_title(original_title: str, model_name: str = "llama3.1:8b") -> TitleResponse:
     """
     Genera varianti creative (Copywriting) di un titolo turistico utilizzando un LLM.
 
@@ -13,7 +13,7 @@ def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b"
 
     Args:
         original_title (str): Il titolo originale da migliorare.
-        model_name (str, optional): Il modello da usare. Default: "qwen2.5:7b".
+        model_name (str, optional): Il modello da usare. Default: "llama3.1:8b".
 
     Returns:
         TitleResponse: Oggetto contenente:
@@ -100,16 +100,31 @@ def generate_optimized_title(original_title: str, model_name: str = "qwen2.5:7b"
             original=original_title,
             options=sanitized_options,
             best_option=data.get("best_option", original_title),
-            model_used=model_name
+            model_used=model_name,
+            success=True,
+            error_message=None
         )
 
     except Exception as e:
-        print(f"Errore generazione titoli: {e}")
+        error_str = str(e)
+        print(f"Errore generazione titoli: {error_str}")
+
+        friendly_error = "Errore generico AI durante la generazione dei titoli."
+
+        if "Connection refused" in error_str or "No connection" in error_str:
+            friendly_error = "Impossibile connettersi a Ollama. Assicurati che sia attivo."
+        elif "model" in error_str and "not found" in error_str:
+            friendly_error = "Modello LLM non trovato sul server."
+        elif isinstance(e, json.JSONDecodeError):
+            friendly_error = "Il modello ha restituito un JSON malformato."
+
         # --- FALLBACK ---
         # Se tutto fallisce, l'utente vede il titolo originale.
         return TitleResponse(
             original=original_title,
             options=[original_title], 
             best_option=original_title,
-            model_used=f"Error ({model_name}) - Fallback"
+            model_used=f"Error ({model_name}) - Fallback",
+            success=False,
+            error_message=f"{friendly_error} (Dettagli: {error_str})"
         )

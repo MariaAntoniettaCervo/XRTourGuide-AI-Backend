@@ -9,9 +9,9 @@ class LLMModelEnum(str, Enum):
     """
     Menu di scelta per il modello di Intelligenza Artificiale (Testo).
     """
-    # Opzione Veloce / Balanced (Default)
+    # Opzione Veloce / Balanced 
     QWEN_7B = "qwen2.5:7b"
-    # Opzione Qualità / Più Creativa (Richiede più VRAM)
+    # Opzione Qualità / Più Creativa (Default)
     LLAMA_8B = "llama3.1:8b"
 
 class TTSModelEnum(str, Enum):
@@ -37,7 +37,7 @@ class TitleRequest(BaseModel):
         description="Il titolo originale grezzo da migliorare."
     )
     model: LLMModelEnum = Field(
-        default=LLMModelEnum.QWEN_7B, 
+        default=LLMModelEnum.LLAMA_8B, 
         description="Scegli il modello AI da usare. Qwen è più veloce, Llama più creativo."
     )
     
@@ -49,7 +49,8 @@ class TitleResponse(BaseModel):
     options: List[str] = Field(..., description="Lista di 3 varianti generate (Corto, Evocativo, Domanda).")
     best_option: str = Field(..., description="La variante raccomandata dall'AI.")
     model_used: str = Field(..., description="Il nome tecnico del modello che ha eseguito il task.")
-
+    success: bool = Field(..., description="Indica se l'AI ha completato il task o se è andata in fallback.")
+    error_message: Optional[str] = None
 # --- DESCRIZIONI (Scripting) ---
 
 class DescriptionRequest(BaseModel):
@@ -65,7 +66,7 @@ class DescriptionRequest(BaseModel):
     target_lang: str = Field("it", description="Lingua di destinazione (attualmente supportato solo 'it').")
     
     model: LLMModelEnum = Field(
-        default=LLMModelEnum.QWEN_7B, 
+        default=LLMModelEnum.LLAMA_8B, 
         description="Modello LLM per la riscrittura."
     )
 
@@ -79,6 +80,8 @@ class DescriptionResponse(BaseModel):
         description="Il testo spezzato in segmenti logici. Fondamentale per il motore TTS per fare le pause giuste."
     )
     model_used: str
+    success: bool = Field(..., description="Indica se l'AI ha completato il task o se è andata in fallback.")
+    error_message: Optional[str] = None
 
 # --- FIX MARKDOWN ---
 
@@ -88,7 +91,7 @@ class MarkdownFixRequest(BaseModel):
     """
     text: str = Field(..., description="Testo con potenziali errori di formattazione o grammatica.")
     tone: str = Field("professional", description="Tono di voce desiderato (es. 'friendly', 'academic').") 
-    model: LLMModelEnum = Field(default=LLMModelEnum.QWEN_7B)
+    model: LLMModelEnum = Field(default=LLMModelEnum.LLAMA_8B)
 
 class MarkdownFixResponse(BaseModel):
     """

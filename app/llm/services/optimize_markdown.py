@@ -2,7 +2,7 @@ from app.llm.factory import LLMFactory
 from app.schemas import MarkdownFixResponse
 import logging
 
-def fix_markdown(text: str, tone: str, model_name: str = "qwen2.5:7b") -> MarkdownFixResponse:
+def fix_markdown(text: str, tone: str, model_name: str = "llama3.1:8b") -> MarkdownFixResponse:
     """
     Esegue un proofreading intelligente del testo mantenendo la formattazione Markdown.
 
@@ -14,7 +14,7 @@ def fix_markdown(text: str, tone: str, model_name: str = "qwen2.5:7b") -> Markdo
     Args:
         text (str): Il testo originale (può contenere sintassi Markdown come **, #, -).
         tone (str): Il tono desiderato per la revisione (es. "professionale", "amichevole", "accademico").
-        model_name (str, optional): Il modello LLM da utilizzare (default: "qwen2.5:7b").
+        model_name (str, optional): Il modello LLM da utilizzare (default: "llama3.1:8b").
 
     Returns:
         MarkdownFixResponse: Un oggetto strutturato contenente:

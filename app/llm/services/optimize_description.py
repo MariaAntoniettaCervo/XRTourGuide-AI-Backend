@@ -3,7 +3,7 @@ import json
 from app.schemas import DescriptionResponse
 from app.utils.text_processing import smart_chunking
 
-def generate_optimized_description(original_text: str, model_name: str = "qwen2.5:7b") -> DescriptionResponse:
+def generate_optimized_description(original_text: str, model_name: str = "llama3.1:8b") -> DescriptionResponse:
     """
     Riscrive una descrizione turistica ottimizzandola per l'ascolto (Storytelling Audio).
 
@@ -13,7 +13,7 @@ def generate_optimized_description(original_text: str, model_name: str = "qwen2.
 
     Args:
         original_text (str): Il testo di input (es. "Statua del 1500 in marmo").
-        model_name (str, optional): Il modello LLM da utilizzare (default: "qwen2.5:7b").
+        model_name (str, optional): Il modello LLM da utilizzare (default: "llama3.1:8b").
 
     Returns:
         DescriptionResponse: Un oggetto contenente:
@@ -96,16 +96,29 @@ def generate_optimized_description(original_text: str, model_name: str = "qwen2.
         return DescriptionResponse(
             full_text_optimized=raw_content,
             tts_chunks=chunks,
-            model_used=model_name
+            model_used=model_name,
+            success=True,
+            error_message=None
         )
 
     except Exception as e:
-        print(f"Errore LLM Descrizione: {e}")
+        error_str = str(e)
+        print(f"Errore LLM Descrizione: {error_str}")
+
+        # Mapping errori tecnici -> Messaggi leggibili (stesso pattern di optimize_markdown.py)
+        friendly_error = "Errore generico AI durante la generazione della descrizione."
+        if "Connection refused" in error_str or "No connection" in error_str:
+            friendly_error = "Impossibile connettersi a Ollama. Assicurati che sia attivo."
+        elif "model" in error_str and "not found" in error_str:
+            friendly_error = "Modello LLM non trovato sul server."
+    
         # --- FALLBACK STRATEGY ---
         # Se l'AI fallisce, il sistema deve rimanere operativo.
         # Restituiamo il testo originale così com'è.
         return DescriptionResponse(
             full_text_optimized=original_text,
             tts_chunks=[original_text], # Unico chunk
-            model_used=f"Error ({model_name}) - Fallback to Original"
+            model_used=f"Error ({model_name}) - Fallback to Original",
+            success=False,
+            error_message=f"{friendly_error} (Dettagli: {error_str})"
         )
